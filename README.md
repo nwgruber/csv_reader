@@ -1,7 +1,7 @@
 # csv_reader
 A tool create plots from your datalogs
 
-![a graph](/.github/images/plotwindow.png)
+![a graph](/.github/images/plotwindow.PNG)
 
 ***
 ## Features
