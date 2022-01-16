@@ -1,7 +1,8 @@
 # csv_reader
 A tool create plots from your datalogs
 
-![a graph](/.github/images/plotwindow.png?raw=true "a graph")
+![a graph](.github/images/plotwindow.png)
+
 ***
 ## Features
 - Takes the .csv of your datalog and extracts data for each pull
