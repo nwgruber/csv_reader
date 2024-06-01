@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from lib import read_datalog, get_pulls, get_pull_info
 
 class MultiPlotFigure(FigureCanvasQTAgg):
-    def __init__(self, title = '', parent = None):
+    def __init__(self, title: str = '', parent=None):
         fig = Figure()
         self.title = title
         self.axes = fig.add_subplot(111)
@@ -27,6 +27,17 @@ class MultiPlotFigure(FigureCanvasQTAgg):
         self.colors = ['b', 'r']
 
     def plot_index(self, xdata: pd.Series, ydata: pd.Series, fig_num: int, y_text: str = '', legend_text: str = ''):
+        """Add a plot at the given index
+
+        Arguments:
+        xdata -- x values
+        ydata -- y values
+        fig_num -- index to plot at (0 for left, 1 for right)
+
+        Keyword arguments:
+        y_text -- y axis label (default empty str)
+        legend_text -- name of curve in the legend (default empty str)
+        """
         current_ax = self.axes_refs[fig_num]
         if self._plot_refs[fig_num] is None:
             self._plot_refs[fig_num] = current_ax.plot(xdata.values, ydata.values, self.colors[fig_num])[0]
@@ -42,6 +53,7 @@ class MultiPlotFigure(FigureCanvasQTAgg):
         self.draw()
 
     def clear_plot(self, fig_num: int):
+        """Clear a plot at the given index (0 for left, 1 for right, and -1 for all)"""
         if fig_num != -1:
             # Clear one plot
             self.axes_refs[fig_num].cla()
@@ -57,12 +69,14 @@ class MultiPlotFigure(FigureCanvasQTAgg):
         self.draw()
 
 class DoubleLineEdit(QLineEdit):
+    """Extension of QLineEdit for float inputs"""
     def __init__(self, lower: float, upper: float, decimals: int, parent=None):
         super().__init__(parent)
         self.double_validator = QDoubleValidator(lower, upper, decimals)
         self.setValidator(self.double_validator)
 
     def validate_input(self):
+        """Validate input and set displayed value to respective limit if input was out of bounds"""
         if self.text() != '':
             value = float(self.text())
             lower = self.double_validator.bottom()
@@ -71,13 +85,13 @@ class DoubleLineEdit(QLineEdit):
             upper = self.double_validator.top()
             if upper.is_integer():
                 upper = int(upper)
-
             if value > upper:
                 self.setText(str(upper))
             elif value < lower:
                 self.setText(str(lower))
 
-    def value(self):
+    def value(self) -> float:
+        """Return input value as float"""
         return float(self.text())
 
 class ErrorMsg(QMessageBox):
@@ -91,7 +105,8 @@ class ErrorMsg(QMessageBox):
         self.setStandardButtons(QMessageBox.Ok)
 
 class PullPlot(QDialog):
-    def __init__(self, df: pd.DataFrame, fig_title, parent = None):
+    """A dialog generated from a DataFrame that plots columns per user input"""
+    def __init__(self, df: pd.DataFrame, fig_title: str, parent = None):
         super().__init__(parent)
         self.fig_title = fig_title
         self.setWindowTitle(fig_title)
@@ -119,7 +134,7 @@ class PullPlot(QDialog):
         scroll_content = QWidget()
 
         self.col_checkboxes = [QCheckBox(col) for col in self.col_names.keys()]
-        [x.stateChanged.connect(self.curveCheckBoxChanged) for x in self.col_checkboxes]
+        [x.stateChanged.connect(self.curve_checkbox_changed) for x in self.col_checkboxes]
         [left_scrollbox_layout.addWidget(x) for x in self.col_checkboxes]
 
         scroll_content.setLayout(left_scrollbox_layout)
@@ -144,7 +159,8 @@ class PullPlot(QDialog):
         main_layout.addWidget(right_widget)
         self.setLayout(main_layout)
 
-    def curveCheckBoxChanged(self):
+    def curve_checkbox_changed(self):
+        """Add/remove a plot when a curve checkbox is changed"""
         current_widget = self.sender()
         requested_plot = current_widget.text()
         widget_states = [x.isChecked() for x in self.col_checkboxes]
@@ -238,6 +254,7 @@ class WidgetGallery(QWidget):
         self.main_widget.addTab(start_tab, 'Start')
 
     def file_btn_pressed(self):
+        """Open a QFileDialog on file button press"""
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('Datalogs (*.csv)')
@@ -251,6 +268,7 @@ class WidgetGallery(QWidget):
             self.optsbox_disabled(False)
 
     def start_btn_pressed(self):
+        """Parse input file for pulls on start button press"""
         [self.datalog, self.ap_info] = read_datalog(self.datalogfile)
         self.throttle_input.validate_input()
         self.time_filter_input.validate_input()
@@ -269,12 +287,14 @@ class WidgetGallery(QWidget):
             msg.exec_()
 
 
-    def optsbox_disabled(self, disabled):
+    def optsbox_disabled(self, disabled: bool):
+        """Set all widgets in options box disabled status per input"""
         self.throttle_input.setDisabled(disabled)
         self.time_filter_input.setDisabled(disabled)
         self.start_btn.setDisabled(disabled)
 
     def create_graphtab(self):
+        """Generate the graph tab on start button press"""
         self.graphtab = QWidget()
         graph_tab_layout = QVBoxLayout()
         graph_tabbox = QGroupBox('Create Plot')
@@ -298,6 +318,7 @@ class WidgetGallery(QWidget):
         self.main_widget.addTab(self.graphtab, 'Graph')
 
     def update_graphtab(self):
+        """Update graph tab data"""
         formspec = '{:<.2f}'
         pull_picker_items = [str(x) for x in self.pull_info.keys()]
         self.pull_picker.clear()
@@ -317,6 +338,7 @@ class WidgetGallery(QWidget):
         self.pull_duration_label.setText(f'Duration: {duration} sec')
 
     def plot_btn_pressed(self):
+        """Present a PullPlot from the selected pull"""
         selected_pull = self.pull_picker.currentIndex()
         pull_df = self.pulls[selected_pull]
         fig_title = 'Pull ' + str(selected_pull + 1)
