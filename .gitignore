@@ -1,2 +1,4 @@
 __pycache__/
 build/
+*.csv
+plt_error_example.py
