@@ -361,8 +361,8 @@ class WidgetGallery(QWidget):
         opts_box = QGroupBox('Options')
         opts_box_layout = QFormLayout()
 
-        self.throttle_input = DoubleLineEdit(1.0, 100.0, 2)
-        self.throttle_input.setToolTip('Omit data when throttle is below this number')
+        self.throttle_input = DoubleLineEdit(1.0, 100.0, 0)
+        self.throttle_input.setToolTip('Omit data when throttle is below this number. Set to 0 to see full dataset.')
         self.throttle_input.setText('50')
 
         self.time_filter_input = DoubleLineEdit(0.001, 10.0, 3)
