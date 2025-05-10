@@ -3,6 +3,13 @@ import numpy as np
 import time
 # datalogfile = 'G:/Cobb/Logs/datalog4.csv'
 
+def fix_datalog_bools(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert on/off values in log to 1s and 0s"""
+    fix_cols = [x for x in df.columns if x.endswith('(on/off)')]
+    for column in fix_cols:
+        df[column].map({'on': 1, 'off': 0})
+    return df
+
 def read_datalog(filepath: str):
     """Opens a datalog csv file and returns a list of the datalog as a DataFrame followed by a string of the accessport info
     """
@@ -12,6 +19,7 @@ def read_datalog(filepath: str):
     df = df.iloc[:, 0:(len(cols) - 1)]
     ap_info = cols[len(cols) - 1]
     f.close()
+    df = fix_datalog_bools(df)
     return [df, ap_info]
 
 def get_pulls(df: pd.DataFrame, min_throttle: float, time_filter: float):
