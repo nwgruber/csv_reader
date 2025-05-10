@@ -7,7 +7,7 @@ def fix_datalog_bools(df: pd.DataFrame) -> pd.DataFrame:
     """Convert on/off values in log to 1s and 0s"""
     fix_cols = [x for x in df.columns if x.endswith('(on/off)')]
     for column in fix_cols:
-        df[column].map({'on': 1, 'off': 0})
+        df[column] = df[column].map({'on': 1, 'off': 0})
     return df
 
 def read_datalog(filepath: str):
