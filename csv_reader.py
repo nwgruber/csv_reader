@@ -1,4 +1,5 @@
 import sys
+import traceback
 from typing import Iterable, Union
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -11,6 +12,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFileD
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from lib import read_datalog, get_pulls, get_pull_info
+from error_dialog import BetterExceptionDialog
 
 
 class MultiPlotFigure(FigureCanvasQTAgg):
@@ -184,7 +186,7 @@ class PullPlot(QDialog):
 
     def create_main_layout(self):
         """Populate dialog with widgets"""
-        # higher level layout 
+        # higher level layout
         main_layout = QHBoxLayout()
         left_highlevel_widget = QWidget()
         left_highlevel_layout = QVBoxLayout()
@@ -396,22 +398,27 @@ class WidgetGallery(QWidget):
             self.opts_box_disabled(False)
 
     def start_button_pressed(self):
-        [self.datalog, self.ap_info] = read_datalog(self.datalogfile)
-        self.throttle_input.validate_input()
-        self.time_filter_input.validate_input()
-        # Get pulls
-        self.pulls = get_pulls(self.datalog, self.throttle_input.value(), self.time_filter_input.value())
-        if bool(self.pulls):
-            # create second tab
-            self.pull_info = get_pull_info(self.pulls)
-            if self.main_widget.count() == 1:
-                self.create_graph_tab()
+        try:
+            [self.datalog, self.ap_info] = read_datalog(self.datalogfile)
+            self.throttle_input.validate_input()
+            self.time_filter_input.validate_input()
+            # Get pulls
+            self.pulls = get_pulls(self.datalog, self.throttle_input.value(), self.time_filter_input.value())
+            if bool(self.pulls):
+                # create second tab
+                self.pull_info = get_pull_info(self.pulls)
+                if self.main_widget.count() == 1:
+                    self.create_graph_tab()
+                else:
+                    self.update_graph_tab()
+                self.main_widget.setCurrentIndex(1)
             else:
-                self.update_graph_tab()
-            self.main_widget.setCurrentIndex(1)
-        else:
-            msg = ErrorMsg('No pulls found in datalog.', infotext = 'Your throttle threshold is too low or time filter too high.')
-            msg.exec_()
+                error_msg = ErrorMsg('No pulls found in datalog.', infotext = 'Your throttle threshold is too low or time filter too high.')
+                error_msg.exec_()
+        except Exception as e:
+            tb = traceback.format_exc()
+            error_msg = BetterExceptionDialog(e, tb)
+            error_msg.exec_()
 
 
     def opts_box_disabled(self, disabled):
